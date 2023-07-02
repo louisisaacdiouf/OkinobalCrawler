@@ -21,19 +21,24 @@ def is_valid_link(url, base_url):
     else:
         return not any(keyword in url for keyword in invalid_keywords) and (url.endswith("/") or url.endswith(".html") or urljoin(base_url, url).endswith("/"))
 
-def scan_links(html_content, base_url):
+def scan_links(html_content, base_url, external_links):
     soup = BeautifulSoup(html_content, "html.parser")
     links = []
     for link in soup.find_all("a"):
         href = link.get("href")
-        if href is not None and is_valid_link(href, base_url):
+        if href is not None:
             absolute_url = urljoin(base_url, href)
-            links.append(absolute_url)
+            if is_internal_link(absolute_url, base_url):
+                if is_valid_link(absolute_url, base_url):
+                    links.append(absolute_url)
+            else:
+                external_links.add(absolute_url)
     return links
 
 def scan_website(base_url):
     visited = set()
     links = []
+    external_links = set()
     queue = [base_url]
 
     while queue:
@@ -45,13 +50,17 @@ def scan_website(base_url):
             response = requests.get(url)
             if response.status_code == 200:
                 html_content = response.text
-                new_links = scan_links(html_content, url)
+                new_links = scan_links(html_content, url, external_links)
                 for link in new_links:
                     if link not in links and link not in visited:
                         links.append(link)
                         queue.append(link)
         except:
             pass
+
+    print("\nExternal Links:")
+    for link in external_links:
+        print(link)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Website Crawler")
