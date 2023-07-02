@@ -40,6 +40,7 @@ def scan_website(base_url):
                 for link in new_links:
                     if link not in links and link not in visited:
                         links.append(link)
+                        print(link)
                         queue.append(link)
         except:
             pass
@@ -51,7 +52,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     domain = args.domain
-    links = scan_website(domain)
     print("Links found:")
-    for link in links:
-        print(link)
+    scan_website(domain)
+    print("\n-----------------------------------\nScan Terminé.")
